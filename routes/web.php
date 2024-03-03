@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TasksController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,8 +14,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/Tasks', [TasksController::class,'index'])->name('Tasks');
+Route::delete('/Tasks/{id}', [TasksController::class,'DeleteTask']);
+Route::get('/SortTasks', [TasksController::class,'SortTasks']);
+Route::post('/EditTask', [TasksController::class,'EditTask'])->name('EditTask');
 
-Route::get('/posts', [PostController::class, 'index'])->name('posts');
+
+Route::get('/CategorizedTasks', [TasksController::class,'CategorizedTasks'])->name('CategorizedTasks');
+Route::delete('/CategorizedTasks/{id}', [TasksController::class,'DeleteTask']);
+
+Route::get('/CreateTask', [TasksController::class, 'create'])->name('CreateTask');
+Route::post('/CreateTask', [TasksController::class, 'store']);
+
+
+
+Route::get('/login', function () {
+    return view('Control.Login');
+});
