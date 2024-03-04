@@ -31,6 +31,7 @@ class CategoryRepository implements CategoryRepositoryInterface
     {
         // Create a new category associated with the specified user
         $category->user_id = $userId;
+        $category->timestamps = false;
         return $category->save();
     }
 

@@ -13,6 +13,11 @@ class TaskRepository implements TaskRepositoryInterface
         // Retrieve tasks associated with the specified user
         return Task::where('user_id', $Userid)->get();
     }
+    public function GetSingleTaskById(int $TaskId)
+    {
+        // Retrieve tasks associated with the specified user
+        return Task::find($TaskId);
+    }
 
     public function GetTasksByCategoryId(int $userId, int $categoryId)
     {
@@ -37,10 +42,30 @@ class TaskRepository implements TaskRepositoryInterface
         return $task->save();
     }
 
-    public function Task_Update(int $userId, Task $task)
+    public function Task_Update(int $userId, Task $task,$id)
     {
-        // Update the task associated with the specified user
-        return $task->update(['user_id' => $userId]);
+        try {
+            // Attempt to find the task by ID
+            $existingTask = Task::findOrFail($id);
+            
+            // Fill the existing task with data from the provided task
+            $existingTask->fill($task->toArray());
+    
+            // Optionally, update other properties of the task
+            // $existingTask->user_id = $userId;
+    
+            // Save the updated task record to the database
+            $existingTask->save();
+    
+            // Return a success response
+            return response()->json(['message' => 'Task updated successfully']);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Task with the given ID not found
+            return response()->json(['error' => 'Task not found'], 404);
+        } catch (\Exception $e) {
+            // Handle other potential exceptions
+            return response()->json(['error' => 'An error occurred while updating the task'], 500);
+        }
     }
 
     public function Task_Delete(int $userId, int $taskId)
