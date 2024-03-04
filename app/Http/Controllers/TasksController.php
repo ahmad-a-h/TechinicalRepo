@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Category;
 use App\Interfaces\CategoryRepositoryInterface;
 use App\Interfaces\TaskRepositoryInterface;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -48,7 +49,7 @@ class TasksController extends BaseController
         $task->Title = $request ->title;
         $task->Description = $request ->description;
         $task->Due_Date = $request ->date;
-        $task->category_id = $request ->category_id;
+        $task->category_id = $request ->category_id ? $request ->category_id : 1 ;
         // dd($task);
         // Call the TaskInterface method to create a new task
         $res = $this->taskInterface->Task_Create($userId,$task);
@@ -92,18 +93,65 @@ class TasksController extends BaseController
         return view('Control.tasks', ['tasks'=> $tasks,'categories'=> $categories]);
     }
 
-    public function EditTask(Request $request){
-        $taskData = json_decode($request->input('task'));
-        // Now $taskData is an object containing all task attributes
+    // public function EditTask(Request $request){
+    //     $taskData = json_decode($request->input('task'), true);
+    //     $categories =  $taskData['categories'];
+    //     // Now $taskData is an array containing all task attributes
+    //     // Create a new task object using the task data
+    //     $task = new Task();
+    //     $task->user_id = $taskData['task']['user_id'];
+    //     $task->title = $taskData['task']['title'];
+    //     $task->description = $taskData['task']['description'];
+    //     $task->due_date = $taskData['task']['Due_Date'];
+    //     $task->category_id = $taskData['task']['category_id'];
+    //     // Pass the $task object to the view
+    //     return view('Control.EditTask', ['task' => $task, 'categories' => $categories,'id' =>$taskData['task']['id']]);
+
+    // }
+    public function EditTask($id){
+        $task = $this->taskInterface->GetSingleTaskById($id);
+        $categories = $this->CategoriesInterface->GetCategoriesByUserId(1);
         
-        // Create a new task object using the task data
+        return view('Control.EditTask', ['task' => $task, 'categories' => $categories,'id' =>$id]);
+
+    }
+    public function saveTask(Request $request,$id)
+    {
+        // Validate the request data
+        // dd($request->input());
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'date' => 'required|date',
+            'category_id' => 'required|numeric',
+        ]);
         $task = new Task();
-        $task->user_id = $taskData->user_id;
-        $task->title = $taskData->title;
-        $task->description = $taskData->description;
-        $task->due_date = $taskData->Due_Date;
-        $task->category_id = $taskData->category_id;
-        
-        dd($task);
+        $task->user_id = 1;
+        $task->title = $request ->title;
+        $task->description = $request ->description;
+        $task->due_date = $request ->Due_Date;
+        $task->category_id = $request ->category_id;
+        $task->Due_Date = $request ->date;
+        $res = $this->taskInterface->Task_Update(1, $task,$id);
+
+        if($res->getStatusCode() == 200) {
+            return redirect()->route('Tasks')->with('success', 'Task updated successfully');
+        }
+
+        // Handle case where task update fails
+    }
+    public function GoToCreateCategory(){
+        return view('Control.CreateCategory');
+    }
+
+    public function CreateCategory(Request $request){
+        $category = new Category();
+
+        // Fill the category instance with data from the request
+        $category->fill($request->input());
+        $res = $this->CategoriesInterface->Category_Create(1, $category);
+        if($res){
+            return redirect()->route('CategorizedTasks');
+        }
     }
 }

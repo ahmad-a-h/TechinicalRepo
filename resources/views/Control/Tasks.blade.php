@@ -1,53 +1,37 @@
-
 @extends('Layout.Home')
 
 @section('content')
-    <div class='main' style="display:flex;justify-content: space-between;margin: 10%;">
-    @if ($tasks->count() > 0)
-    <div>
-    @foreach ($tasks as $task)
-        <div style="display:flex;width:50%;align-items:center;flex-direction: column;">
-            <div >
-                <div style="display:flex;align-items: center;">
-                    <h3>{{ $task->title }}</h3>
-                    <input type="date" id="date" name="date" value="{{ $task->Due_Date ? date('Y-m-d', strtotime($task->Due_Date)) : '' }}" 
-                    disabled="true" style="height:fit-content;margin-left:3%">
+    <div style=" display: flex; ">
+    <div class="main" style="display: flex;margin: 5%;flex-direction: row;width: 75%;flex-wrap: wrap;">
+        @if ($tasks->count() > 0)
+            @foreach ($tasks as $task)
+                <div class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 m-1">
+                    <a href="#">
+                        <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ $task->title }}</h5>
+                    </a>
+                    <p class="mb-3 text-sm text-gray-500 dark:text-gray-300">Due Date: {{ $task->Due_Date ? date('Y-m-d', strtotime($task->Due_Date)) : 'Not Set' }}</p>
+                    <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">{{ $task->description }}</p>
+                    <form action="/Tasks/{{ $task->id }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-red-700 rounded-lg hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">
+                            Delete
+                            <i class="fa fa-trash ms-2"></i>
+                        </button>
+                    </form>
                 </div>
-                <label for="category_id">Category </label>
-                <select name="category_id" id="category_id">
-                    @if($task->category_id)
-                        <option value="{{ $task->category_id }}">{{ $task->category->CategoryName }}</option>
-                    @endif
-                    @foreach($categories as $category)
-                        @if($task->category_id != $category->id)
-                            <option value="{{ $category->id }}">{{ $category->CategoryName }}</option>
-                        @endif
-                    @endforeach
-                </select>
-            </div>
+            @endforeach
             
-            <div>{{ $task->description }}</div>
-            <i class="fa fa-edit"></i>
-
-            <form action="/Tasks/{{$task->id}}" method="POST">
-                @csrf
-                @method('DELETE')
-                <button type="submit">
-                    <i class="fa fa-trash"></i>
-                </button>
-            </form>
-        </div>    
-
-    @endforeach
+        @else
+            <p>No tasks found.</p>
+        @endif
     </div>
     <form action="/SortTasks" method="GET">
         @csrf
-        <button type="submit">
-            <i class="fa fa-filter" style="font-size:24px"></i>
+        <button type="submit" class="inline-flex items-center px-3 py-2 mt-4 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            Sort Tasks
+            <i class="fa fa-filter ms-2"></i>
         </button>
     </form>
-    
-    @else
-    <p>No tasks found.</p>
-    @endif
+    </div>
 @endsection
