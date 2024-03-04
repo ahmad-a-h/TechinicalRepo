@@ -9,19 +9,32 @@
     <!-- <title>Document</title> -->
 </head>
 <body>
-    
-    <nav>
-    <ul>
-        <li>
-            <a href="{{ route('Tasks')}}">Tasks</a>
-        </li>
-        <li>
-            <a href="{{ route('CreateTask')}}">Create Tasks</a>
-        </li>
-        <li>
-            <a href="{{ route('CategorizedTasks')}}">Categorized Tasks</a>
-        </li>
-    </ul>
+    <nav class="bg-gray-50 dark:bg-gray-700">
+        <div class="max-w-screen-xl px-4 py-3 mx-auto">
+            <div class="flex items-center">
+                <ul class="flex flex-row font-medium mt-0 space-x-8 rtl:space-x-reverse text-sm">
+                    
+                @if(auth()->user())
+                    <li>
+                        <a href="{{ route('Tasks')}}" class="text-gray-900 dark:text-white hover:underline" aria-current="page">Tasks</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('CreateTask')}}" class="text-gray-900 dark:text-white hover:underline">Create a Task</a>
+                    </li>
+                    <li>
+                        <a href="{{ route('CategorizedTasks')}}" class="text-gray-900 dark:text-white hover:underline">Categorized Tasks</a>
+                    </li>
+                    
+                @endif
+                <li>
+                    <a href="{{ route('register')}}" class="text-gray-900 dark:text-white hover:underline">Register</a>
+                </li>
+                <li>
+                    <a href="{{ route('logout')}}" class="text-gray-900 dark:text-white hover:underline">Logout</a>
+                </li>
+                </ul>
+            </div>
+        </div>
     </nav>
     @yield('content')
 </body>

@@ -43,7 +43,18 @@ class CategoryRepository implements CategoryRepositoryInterface
 
     public function Category_Delete(int $userId, int $categoryId)
     {
-        // Delete the category associated with the specified user and ID
-        return Category::where('user_id', $userId)->where('id', $categoryId)->delete();
+        $tasks = Task::where('user_id', $userId)
+                 ->where('category_id', $categoryId)
+                 ->get();
+
+    // Step 2: Delete all tasks belonging to the specified user and category
+    Task::where('user_id', $userId)
+         ->where('category_id', $categoryId)
+         ->delete();
+
+    // Step 3: Delete the category with the specified ID for the given user
+    return Category::where('user_id', $userId)
+                   ->where('id', $categoryId)
+                   ->delete();
     }
 }

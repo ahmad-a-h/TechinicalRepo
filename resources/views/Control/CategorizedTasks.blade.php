@@ -7,6 +7,15 @@
             @foreach($categories as $category)
                 <div class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 m-1">
                     <h2 class="mb-4 text-2xl font-bold">{{ $category->CategoryName }}</h2>
+                    @if ($category->CategoryName != 'Main')
+                    <form action="{{ route('DeleteCategory', ['id' => $category->id]) }}" method="POST" class="inline-block">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="px-3 py-2 text-xs font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800">Delete Category
+                            <i class="fa fa-trash ms-2"></i>
+                        </button>
+                    </form>
+                    @endif
                     @foreach ($category->tasks as $task)
                         <div>
                             <h3 class="mb-2 text-lg font-semibold">{{ $task->title }}</h3>
@@ -43,5 +52,4 @@
         </div>
     </form>
     </div>
-    
 @endsection

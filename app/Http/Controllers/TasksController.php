@@ -9,23 +9,31 @@ use App\Interfaces\TaskRepositoryInterface;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Routing\Controller as BaseController;
 
 class TasksController extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
     protected $taskInterface;
-    protected $CategoriesInterface;
-    public function __construct(TaskRepositoryInterface $taskInterface, CategoryRepositoryInterface $CategoriesInterface){
+    protected $CategoriesInterface; 
+    protected $auth;
+    protected $userId;
+    public function __construct(TaskRepositoryInterface $taskInterface, CategoryRepositoryInterface $CategoriesInterface,){
         $this->taskInterface = $taskInterface;
         $this->CategoriesInterface = $CategoriesInterface;
+        $this->middleware(function ($request, $next) {
+            $this->userId = auth()->user()->id;
+            if($this->userId)
+            return $next($request);
+            else return  redirect()->route('auth.login');
+        });
+
     }
     public function index()
     {
-        // $userId = Auth::id();
-        $userId = 1;
-        $tasks = $this->taskInterface->GetTaskByUserId($userId);
-        $categories = $this->CategoriesInterface->GetCategoriesByUserId($userId);
+        $tasks = $this->taskInterface->GetTaskByUserId($this->userId);
+        $categories = $this->CategoriesInterface->GetCategoriesByUserId($this->userId);
         return view('Control.tasks', ['tasks'=> $tasks,'categories'=> $categories]);
     }
 
@@ -41,18 +49,17 @@ class TasksController extends BaseController
             'description'=> 'required',
             'date'=> 'required|date',
         ]);
-        $userId = 1;
         // = auth()->id();
         // Create a new task object
         $task = new Task();
-        $task->user_id = $userId;
+        $task->user_id = $this->userId;
         $task->Title = $request ->title;
         $task->Description = $request ->description;
         $task->Due_Date = $request ->date;
         $task->category_id = $request ->category_id ? $request ->category_id : 1 ;
         // dd($task);
         // Call the TaskInterface method to create a new task
-        $res = $this->taskInterface->Task_Create($userId,$task);
+        $res = $this->taskInterface->Task_Create($this->userId,$task);
         if($res){
             return redirect()->route('Tasks')->with('success','Task created successfully');
         }
@@ -60,17 +67,16 @@ class TasksController extends BaseController
     } 
     public function create(){
         
-        $categories = $this->CategoriesInterface->GetCategoriesByUserId(1);
+        $categories = $this->CategoriesInterface->GetCategoriesByUserId($this->userId);
         return view('Control.CreateTask', ['categories'=> $categories]);
     }
     public function CategorizedTasks()
     {
         
-        $userId = 1;
-        $categories = $this->CategoriesInterface->GetCategoriesByUserId($userId);
+        $categories = $this->CategoriesInterface->GetCategoriesByUserId($this->userId);
         foreach ($categories as $category) {
             // Fetch tasks for the current category ID
-            $tasks = $this->taskInterface->GetTasksByCategoryId($userId,$category->id);
+            $tasks = $this->taskInterface->GetTasksByCategoryId($this->userId,$category->id);
             
             // Append tasks to the category object
             $category->tasks = $tasks;
@@ -78,8 +84,7 @@ class TasksController extends BaseController
         return view('Control.CategorizedTasks', ['categories'=> $categories]);
     }
     public function DeleteTask($id){
-        $userId = 1;
-        $res = $this->taskInterface->Task_Delete($userId,$id);
+        $res = $this->taskInterface->Task_Delete($this->userId,$id);
         if($res){
             return redirect()->route('Tasks');
         }
@@ -87,9 +92,8 @@ class TasksController extends BaseController
     public function SortTasks()
     {
         
-        $userId = 1;
-        $tasks = $this->taskInterface->SortTasksByDueDate($userId);
-        $categories = $this->CategoriesInterface->GetCategoriesByUserId($userId);
+        $tasks = $this->taskInterface->SortTasksByDueDate($this->userId);
+        $categories = $this->CategoriesInterface->GetCategoriesByUserId($this->userId);
         return view('Control.tasks', ['tasks'=> $tasks,'categories'=> $categories]);
     }
 
@@ -110,7 +114,7 @@ class TasksController extends BaseController
     // }
     public function EditTask($id){
         $task = $this->taskInterface->GetSingleTaskById($id);
-        $categories = $this->CategoriesInterface->GetCategoriesByUserId(1);
+        $categories = $this->CategoriesInterface->GetCategoriesByUserId($this->userId);
         
         return view('Control.EditTask', ['task' => $task, 'categories' => $categories,'id' =>$id]);
 
@@ -126,13 +130,13 @@ class TasksController extends BaseController
             'category_id' => 'required|numeric',
         ]);
         $task = new Task();
-        $task->user_id = 1;
+        $task->user_id = $this->userId;
         $task->title = $request ->title;
         $task->description = $request ->description;
         $task->due_date = $request ->Due_Date;
         $task->category_id = $request ->category_id;
         $task->Due_Date = $request ->date;
-        $res = $this->taskInterface->Task_Update(1, $task,$id);
+        $res = $this->taskInterface->Task_Update($this->userId, $task,$id);
 
         if($res->getStatusCode() == 200) {
             return redirect()->route('Tasks')->with('success', 'Task updated successfully');
@@ -149,7 +153,13 @@ class TasksController extends BaseController
 
         // Fill the category instance with data from the request
         $category->fill($request->input());
-        $res = $this->CategoriesInterface->Category_Create(1, $category);
+        $res = $this->CategoriesInterface->Category_Create($this->userId, $category);
+        if($res){
+            return redirect()->route('CategorizedTasks');
+        }
+    }
+    public function DeleteCategory($id){
+        $res = $this->CategoriesInterface->Category_Delete($this->userId,$id);
         if($res){
             return redirect()->route('CategorizedTasks');
         }
